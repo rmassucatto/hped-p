@@ -26,6 +26,8 @@
   .zap { display:inline-flex; align-items:center; gap:8px; text-decoration:none; background:#25D366; color:#082011; padding:8px 12px; border-radius:999px; font-weight:700; }
   canvas { background: rgba(0,0,0,0.2); border-radius:14px; padding:8px; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.35)); }
 </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#28a745">
 </head>
 <body>
   <header>
@@ -146,6 +148,13 @@ try {
     $("peso").value = last.pesoPaciente;
   }
 } catch {}
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js").catch(console.error);
+    });
+  }
 </script>
 </body>
 </html>
