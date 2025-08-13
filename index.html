@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HPed-P • Calculadora Peso (média)</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' ry='22' fill='%2306a34a'/%3E%3Ctext x='50' y='60' font-size='48' text-anchor='middle' fill='white' font-family='Arial, Helvetica, sans-serif'%3EHPed%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root { --verde:#28a745; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; margin: 0; background: #0b1320; color: #eaf2f1; }
+  header { background: var(--verde); color:#fff; padding:14px 16px; font-size:18px; font-weight:700; display:flex; align-items:center; gap:10px; }
+  header .logo { background:#0e7a3a; padding:4px 10px; border-radius:14px; }
+  main { padding: 16px; max-width: 860px; margin: 0 auto; }
+  .card { background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px; box-shadow: 0 12px 24px rgba(0,0,0,0.25); }
+  label { font-size: 12px; color:#cfe6df; display:block; margin-bottom:6px; }
+  select, input { width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.08); color:#eaf2f1; outline:none; }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+  .actions { display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:8px; }
+  button { padding:10px 12px; border-radius:12px; border:none; cursor:pointer; font-weight:700; }
+  .btn-primary { background: var(--verde); color:white; }
+  .btn-ghost { background: rgba(255,255,255,0.10); color:#eaf2f1; }
+  .mt { margin-top:14px; }
+  .muted { color:#a7c4bd; font-size:12px; }
+  .zap { display:inline-flex; align-items:center; gap:8px; text-decoration:none; background:#25D366; color:#082011; padding:8px 12px; border-radius:999px; font-weight:700; }
+  canvas { background: rgba(0,0,0,0.2); border-radius:14px; padding:8px; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.35)); }
+</style>
+</head>
+<body>
+  <header>
+    <span class="logo">HPed</span>
+    Calculadora de Peso (Média)
+    <span style="margin-left:auto"></span>
+    <a class="zap" href="https://wa.me/5515997067660" target="_blank" rel="noopener">WhatsApp</a>
+  </header>
+  <main>
+    <div class="card">
+      <div class="grid">
+        <div>
+          <label>Sexo</label>
+          <select id="sexo">
+            <option value="M">Masculino</option>
+            <option value="F">Feminino</option>
+          </select>
+        </div>
+        <div></div>
+        <div>
+          <label>Idade</label>
+          <input id="idade" type="number" min="0" step="1" placeholder="ex: 24">
+        </div>
+        <div>
+          <label>Unidade</label>
+          <select id="unidade">
+            <option value="meses">Meses</option>
+            <option value="anos">Anos</option>
+          </select>
+        </div>
+        <div>
+          <label>Peso do paciente (kg)</label>
+          <input id="peso" type="number" min="0" step="0.01" placeholder="ex: 14.2">
+        </div>
+        <div class="actions">
+          <button id="calcular" class="btn-primary">Calcular</button>
+          <button id="limpar" class="btn-ghost">Limpar</button>
+        </div>
+      </div>
+      <div class="mt"><canvas id="grafico" height="180"></canvas></div>
+      <div id="saida" class="mt muted"></div>
+      <div class="mt muted">Comparação entre o peso médio esperado para a idade e o peso informado.</div>
+    </div>
+  </main>
+
+<script>
+// Dados embutidos somente com MÉDIA por idade (meses)
+const dados = {
+  F: [{age_months:1,mean:24.042},{age_months:3,mean:5.898},{age_months:4,mean:6.364},{age_months:5,mean:17.727},{age_months:6,mean:7.237},{age_months:9,mean:8.408},{age_months:10,mean:8.765},{age_months:12,mean:9.435},{age_months:13,mean:9.749},{age_months:14,mean:10.051},{age_months:15,mean:10.340},{age_months:16,mean:10.618},{age_months:17,mean:10.886},{age_months:18,mean:11.143},{age_months:19,mean:11.391},{age_months:20,mean:11.631},{age_months:21,mean:11.862},{age_months:23,mean:12.302},{age_months:25,mean:12.716},{age_months:28,mean:13.297},{age_months:29,mean:13.481},{age_months:30,mean:13.662},{age_months:31,mean:13.839},{age_months:32,mean:14.012},{age_months:34,mean:14.352},{age_months:35,mean:14.519},{age_months:36,mean:14.683},{age_months:39,mean:15.168},{age_months:41,mean:15.487},{age_months:42,mean:15.645},{age_months:43,mean:15.804},{age_months:44,mean:15.962},{age_months:45,mean:16.120},{age_months:47,mean:16.436},{age_months:48,mean:16.595},{age_months:50,mean:16.915},{age_months:51,mean:17.075},{age_months:52,mean:17.237},{age_months:54,mean:17.562},{age_months:57,mean:18.058},{age_months:58,mean:18.225},{age_months:60,mean:18.563},{age_months:61,mean:18.733},{age_months:62,mean:18.904},{age_months:64,mean:19.251},{age_months:66,mean:19.601},{age_months:68,mean:19.955},{age_months:69,mean:20.133},{age_months:70,mean:20.313},{age_months:71,mean:20.493},{age_months:72,mean:20.674},{age_months:74,mean:21.039},{age_months:78,mean:21.777},{age_months:79,mean:21.963},{age_months:80,mean:22.149},{age_months:81,mean:22.355},{age_months:82,mean:22.524},{age_months:83,mean:22.712},{age_months:84,mean:22.901},{age_months:85,mean:23.090},{age_months:89,mean:23.851},{age_months:91,mean:24.234},{age_months:94,mean:24.813},{age_months:95,mean:25.007},{age_months:96,mean:25.202},{age_months:97,mean:25.398},{age_months:99,mean:25.792},{age_months:101,mean:26.190},{age_months:102,mean:26.591},{age_months:103,mean:26.594},{age_months:104,mean:26.798},{age_months:105,mean:27.004},{age_months:108,mean:27.634},{age_months:109,mean:27.849},{age_months:110,mean:28.066},{age_months:112,mean:28.510},{age_months:113,mean:23.738},{age_months:114,mean:28.969},{age_months:115,mean:29.204},{age_months:116,mean:29.444},{age_months:117,mean:29.689},{age_months:118,mean:29.939},{age_months:119,mean:30.194},{age_months:120,mean:30.456},{age_months:121,mean:30.724},{age_months:122,mean:30.999},{age_months:123,mean:31.281},{age_months:125,mean:31.869},{age_months:127,mean:32.493},{age_months:129,mean:33.157},{age_months:130,mean:33.506},{age_months:131,mean:33.866},{age_months:132,mean:34.239},{age_months:134,mean:35.025},{age_months:137,mean:36.317},{age_months:138,mean:36.780},{age_months:139,mean:37.262},{age_months:142,mean:38.824},{age_months:143,mean:39.387}],
+  M: [{age_months:1,mean:9.443},{age_months:3,mean:6.390},{age_months:4,mean:6.902},{age_months:5,mean:7.387},{age_months:6,mean:7.845},{age_months:7,mean:8.278},{age_months:9,mean:9.076},{age_months:12,mean:10.120},{age_months:14,mean:10.726},{age_months:16,mean:41.272},{age_months:17,mean:11.525},{age_months:18,mean:11.765},{age_months:19,mean:11.995},{age_months:20,mean:12.213},{age_months:25,mean:13.177},{age_months:27,mean:13.516},{age_months:28,mean:13.678},{age_months:29,mean:13.683},{age_months:30,mean:13.990},{age_months:31,mean:14.142},{age_months:38,mean:15.154},{age_months:39,mean:15.297},{age_months:40,mean:15.440},{age_months:41,mean:15.583},{age_months:43,mean:10.431},{age_months:44,mean:16.022},{age_months:47,mean:16.474},{age_months:48,mean:16.629},{age_months:49,mean:16.786},{age_months:50,mean:16.945},{age_months:51,mean:17.107},{age_months:52,mean:17.271},{age_months:53,mean:17.438},{age_months:54,mean:17.607},{age_months:55,mean:17.778},{age_months:56,mean:15.874},{age_months:57,mean:18.129},{age_months:58,mean:18.308},{age_months:59,mean:18.489},{age_months:60,mean:18.673},{age_months:61,mean:18.859},{age_months:62,mean:19.048},{age_months:63,mean:19.239},{age_months:64,mean:19.432},{age_months:67,mean:20.023},{age_months:68,mean:8.688},{age_months:69,mean:20.427},{age_months:70,mean:20.631},{age_months:71,mean:20.836},{age_months:73,mean:21.251},{age_months:76,mean:21.882},{age_months:78,mean:22.305},{age_months:79,mean:22.518},{age_months:80,mean:22.731},{age_months:81,mean:22.944},{age_months:82,mean:23.158},{age_months:83,mean:23.371},{age_months:84,mean:23.584},{age_months:85,mean:23.796},{age_months:87,mean:24.221},{age_months:89,mean:24.643},{age_months:91,mean:25.062},{age_months:92,mean:21.043},{age_months:93,mean:25.477},{age_months:94,mean:25.684},{age_months:95,mean:25.889},{age_months:96,mean:26.094},{age_months:97,mean:26.297},{age_months:98,mean:26.500},{age_months:99,mean:26.701},{age_months:100,mean:26.902},{age_months:103,mean:27.498},{age_months:104,mean:27.696},{age_months:105,mean:27.892},{age_months:106,mean:28.089},{age_months:107,mean:28.285},{age_months:108,mean:28.481},{age_months:109,mean:28.677},{age_months:110,mean:28.874},{age_months:113,mean:29.467},{age_months:114,mean:29.668},{age_months:116,mean:30.073},{age_months:117,mean:30.279},{age_months:118,mean:30.488},{age_months:119,mean:30.700},{age_months:120,mean:30.916},{age_months:121,mean:31.136},{age_months:122,mean:31.360},{age_months:123,mean:31.589},{age_months:124,mean:31.824},{age_months:126,mean:29.269},{age_months:127,mean:32.569},{age_months:129,mean:33.105},{age_months:130,mean:33.387},{age_months:131,mean:33.679},{age_months:132,mean:33.983},{age_months:133,mean:34.298},{age_months:135,mean:34.969},{age_months:136,mean:35.326},{age_months:137,mean:35.698},{age_months:139,mean:36.494},{age_months:140,mean:36.920},{age_months:141,mean:37.376},{age_months:142,mean:37.833},{age_months:143,mean:38.323},{age_months:144,mean:38.836}]
+};
+
+const $ = id => document.getElementById(id);
+let chart;
+
+function nearestRowMean(arr, ageMonths) {
+  if (!arr.length) return null;
+  let best = arr[0], bestDiff = Math.abs(arr[0].age_months - ageMonths);
+  for (const r of arr) {
+    const d = Math.abs(r.age_months - ageMonths);
+    if (d < bestDiff) { best = r; bestDiff = d; }
+  }
+  return best;
+}
+
+function renderChart(mean, paciente) {
+  const ctx = $("grafico").getContext("2d");
+  const labels = ["Médio", "Paciente"];
+  const data = [mean, paciente];
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: "bar",
+    data: { labels, datasets: [{ data, backgroundColor: ['#4da6ff', '#ff9933'], borderRadius: 12, borderSkipped: false }] },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+
+function calcular() {
+  const sexo = $("sexo").value;
+  const idadeVal = Number($("idade").value || 0);
+  const unidade = $("unidade").value;
+  const pesoPaciente = Number($("peso").value || 0);
+
+  const idadeMeses = unidade === "anos" ? idadeVal * 12 : idadeVal;
+  const tabela = sexo === "M" ? dados.M : dados.F;
+  const row = nearestRowMean(tabela, idadeMeses);
+  if (!row) { $("saida").innerText = "Sem dados."; return; }
+
+  renderChart(row.mean, pesoPaciente);
+  const diff = pesoPaciente - row.mean;
+  const status = diff === 0 ? "igual" : diff > 0 ? "acima" : "abaixo";
+  $("saida").innerHTML = `Referência mais próxima: <b>${row.age_months}</b> meses • Média: <b>${row.mean.toFixed(2)} kg</b><br>` +
+                         `Paciente: <b>${pesoPaciente.toFixed(2)} kg</b> — <b>${status}</b> da média por <b>${Math.abs(diff).toFixed(2)} kg</b>.`;
+
+  localStorage.setItem("hped_last", JSON.stringify({ sexo, idadeVal, unidade, pesoPaciente }));
+}
+
+$("calcular").addEventListener("click", calcular);
+$("limpar").addEventListener("click", () => {
+  $("idade").value = "";
+  $("peso").value = "";
+  $("unidade").value = "meses";
+  $("sexo").value = "M";
+  if (chart) { chart.destroy(); chart = null; }
+  $("saida").innerHTML = "";
+  localStorage.removeItem("hped_last");
+});
+
+try {
+  const last = JSON.parse(localStorage.getItem("hped_last") || "null");
+  if (last) {
+    $("sexo").value = last.sexo;
+    $("idade").value = last.idadeVal;
+    $("unidade").value = last.unidade;
+    $("peso").value = last.pesoPaciente;
+  }
+} catch {}
+</script>
+</body>
+</html>
